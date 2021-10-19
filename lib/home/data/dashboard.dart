@@ -9,9 +9,9 @@ class Dashboard {
     required this.beatRate,
   });
 
-  factory Dashboard.fromJson(Map<String, Object> json) => Dashboard(
+  factory Dashboard.fromJson(Map<String, dynamic> json) => Dashboard(
         temperature: json['temperature'] as int,
-        oxygen: json['temperature'] as int,
-        beatRate: json['temperature'] as int,
+        oxygen: json['oxygen'] as int,
+        beatRate: json['beat_rate'] as int,
       );
 }

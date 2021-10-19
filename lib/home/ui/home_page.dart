@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:upscale_help_app/home/data/dashboard.dart';
+import 'package:upscale_help_app/home/logic/mqtt_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -14,23 +15,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final _service = MQTTService();
   final _controller = StreamController<Dashboard>();
 
   @override
   void initState() {
-    Timer.periodic(
-      const Duration(seconds: 2),
-      (timer) {
-        _controller.add(
-          Dashboard(
-            temperature: Random().nextInt(50),
-            oxygen: Random().nextInt(100),
-            beatRate: Random().nextInt(100),
-          ),
-        );
-      },
-    );
-
+    // Timer.periodic(
+    //   const Duration(seconds: 2),
+    //   (timer) {
+    //     _controller.add(
+    //       Dashboard(
+    //         temperature: Random().nextInt(50),
+    //         oxygen: Random().nextInt(100),
+    //         beatRate: Random().nextInt(100),
+    //       ),
+    //     );
+    //   },
+    // );
+    _service.init(_controller);
     super.initState();
   }
 
@@ -60,18 +62,18 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       RealTimeWidget(
                         title: 'Temperatura Corporal',
-                        number: snapshot.data!.temperature,
-                        color: getTemperatureColor(snapshot.data!.temperature),
+                        number: '${snapshot.data!.temperature} °C',
+                        icon: Icons.thermostat,
                       ),
                       RealTimeWidget(
                         title: 'Oxigenio',
-                        number: snapshot.data!.oxygen,
-                        color: getOxigenColor(snapshot.data!.oxygen),
+                        number: '${snapshot.data!.oxygen} %',
+                        icon: Icons.ac_unit,
                       ),
                       RealTimeWidget(
                         title: 'Batimentos Cardíacos',
-                        number: snapshot.data!.beatRate,
-                        color: getBeatRateColor(snapshot.data!.beatRate),
+                        number: '${snapshot.data!.beatRate.toString()} bpm',
+                        icon: Icons.favorite,
                       )
                     ],
                   ),
@@ -212,58 +214,40 @@ class CalendarItem extends StatelessWidget {
 }
 
 class RealTimeWidget extends StatelessWidget {
-  final int number;
+  final String number;
   final String title;
-  final Color color;
+  final IconData icon;
 
   const RealTimeWidget({
     Key? key,
     required this.number,
     required this.title,
-    required this.color,
+    required this.icon,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 12),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
+          Icon(
+            icon,
+            color: Colors.white,
+          ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Center(
             child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 8,
-          ),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(
-                Radius.circular(12),
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 2.0,
-                  spreadRadius: 0.0,
-                  offset: Offset(2.0, 2.0), // shadow direction: bottom right
-                )
-              ],
-              color: color,
-            ),
-            height: 80,
-            child: Center(
-              child: Text(
-                number.toString(),
-                style: const TextStyle(fontSize: 26, color: Colors.white),
-              ),
+              number.toString(),
+              style: const TextStyle(fontSize: 26, color: Colors.white),
             ),
           )
         ],
