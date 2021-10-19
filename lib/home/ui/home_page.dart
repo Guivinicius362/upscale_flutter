@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
                         color: getTemperatureColor(snapshot.data!.temperature),
                       ),
                       RealTimeWidget(
-                        title: 'Oxigenio',
+                        title: 'Oxigênio',
                         number: snapshot.data!.oxygen,
                         color: getOxigenColor(snapshot.data!.oxygen),
                       ),
