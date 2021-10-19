@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.thermostat,
                       ),
                       RealTimeWidget(
-                        title: 'Oxigenio',
+                        title: 'Oxigênio',
                         number: '${snapshot.data!.oxygen} %',
                         icon: Icons.ac_unit,
                       ),
