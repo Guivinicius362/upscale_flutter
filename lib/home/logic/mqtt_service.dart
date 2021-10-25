@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -11,19 +12,26 @@ class MQTTService {
   late MqttServerClient client;
   MQTTService();
 
-  void init<T>(StreamController<Dashboard> controller) async {
+  void init<T>(
+    StreamController<Dashboard> controller,
+    StreamController<bool> emergecyController,
+  ) async {
+    var rng = Random();
     MqttServerClient client = MqttServerClient.withPort(
-        'broker.mqttdashboard.com', 'clientId-aAlCgH17Zw', 1883);
+        '73c9b9e3ef304ef1975e487d39a8be59.s1.eu.hivemq.cloud',
+        'mobile ${rng.nextInt(100)}',
+        8883);
     client.logging(on: true);
     client.onConnected = onConnected;
     client.onDisconnected = onDisconnected;
     client.onUnsubscribed = onUnsubscribed;
     client.onSubscribed = onSubscribed;
+    client.secure = true;
     client.onSubscribeFail = onSubscribeFail;
     client.pongCallback = pong;
 
     final connMessage = MqttConnectMessage()
-        .authenticateAs('username', 'password')
+        .authenticateAs('melindroso', 'Melindroso20')
         .withWillTopic('randomtopic')
         .withWillMessage('connected')
         .withWillQos(MqttQos.atLeastOnce);
@@ -37,13 +45,21 @@ class MQTTService {
 
     client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> event) {
       final MqttPublishMessage recMess = event[0].payload as MqttPublishMessage;
-      final String message =
+      final String? message =
           MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-      final json = Map<String, dynamic>.from(jsonDecode(message));
-      final dashboard = Dashboard.fromJson(json);
-      controller.add(dashboard);
+
+      if (message != null && message.isNotEmpty) {
+        final json = Map<String, dynamic>.from(jsonDecode(message));
+        if (json['emergency'] != null && json['emergency'] as bool == true) {
+          return emergecyController.add(true);
+        }
+
+        final dashboard = Dashboard.fromJson(json);
+        return controller.add(dashboard);
+      }
     });
-    client.subscribe('upscale_help', MqttQos.exactlyOnce);
+    client.subscribe('vital_signs_2', MqttQos.exactlyOnce);
+    client.subscribe('emergency', MqttQos.exactlyOnce);
   }
 
   // connection succeeded

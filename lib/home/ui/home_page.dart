@@ -17,22 +17,38 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _service = MQTTService();
   final _controller = StreamController<Dashboard>();
-
+  final _emergencyController = StreamController<bool>();
   @override
   void initState() {
-    // Timer.periodic(
-    //   const Duration(seconds: 2),
-    //   (timer) {
-    //     _controller.add(
-    //       Dashboard(
-    //         temperature: Random().nextInt(50),
-    //         oxygen: Random().nextInt(100),
-    //         beatRate: Random().nextInt(100),
-    //       ),
-    //     );
-    //   },
-    // );
-    _service.init(_controller);
+    _service.init(_controller, _emergencyController);
+    _emergencyController.stream.listen(
+      (event) {
+        showModalBottomSheet(
+          context: context,
+          builder: (_) => Container(
+            color: Colors.blueGrey.shade900,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: const [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Você clicou no botão de emergência, seu médico já foi informado.',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
     super.initState();
   }
 
@@ -55,24 +71,37 @@ class _HomePageState extends State<HomePage> {
           StreamBuilder<Dashboard>(
             stream: _controller.stream,
             builder: (context, snapshot) {
-              if (snapshot.data == null) return const SizedBox();
+              if (snapshot.data == null) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                );
+              }
               return Column(
                 children: [
                   Column(
                     children: [
                       RealTimeWidget(
                         title: 'Temperatura Corporal',
-                        number: '${snapshot.data!.temperature} °C',
+                        number:
+                            '${snapshot.data!.temperature.toStringAsFixed(2)} °C',
                         icon: Icons.thermostat,
                       ),
                       RealTimeWidget(
                         title: 'Oxigênio',
-                        number: '${snapshot.data!.oxygen} %',
+                        number: '${snapshot.data!.oxygen.toStringAsFixed(2)} %',
                         icon: Icons.ac_unit,
                       ),
                       RealTimeWidget(
                         title: 'Batimentos Cardíacos',
-                        number: '${snapshot.data!.beatRate.toString()} bpm',
+                        number:
+                            '${snapshot.data!.beatRate.toStringAsFixed(2)} bpm',
                         icon: Icons.favorite,
                       )
                     ],
@@ -236,6 +265,7 @@ class RealTimeWidget extends StatelessWidget {
             icon,
             color: Colors.white,
           ),
+          const Spacer(),
           Text(
             title,
             style: const TextStyle(
@@ -244,10 +274,12 @@ class RealTimeWidget extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+          const Spacer(),
           Center(
             child: Text(
               number.toString(),
-              style: const TextStyle(fontSize: 26, color: Colors.white),
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 20, color: Colors.white),
             ),
           )
         ],
